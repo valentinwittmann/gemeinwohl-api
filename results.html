@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Public Value Advisor</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px auto;
+        }
+        table {
+            width: 80%;
+            margin: 20px auto;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Public Value Evaluation</h1>
+    <div id="resultTable"></div>
+    <div id="chart"></div>
+    
+    <script>
+        async function fetchResults() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const question = urlParams.get("question");
+            if (!question) {
+                document.getElementById("resultTable").innerHTML = "No question provided.";
+                return;
+            }
+            
+            const response = await fetch(`https://gemeinwohl-api.onrender.com/evaluate/?question=${encodeURIComponent(question)}`);
+            const data = await response.json();
+            
+            let tableHTML = "<table><tr><th>Dimension</th><th>Score</th></tr>";
+            for (const [dimension, score] of Object.entries(data.scores)) {
+                tableHTML += `<tr><td>${dimension}</td><td>${score}</td></tr>`;
+            }
+            tableHTML += "</table>";
+            document.getElementById("resultTable").innerHTML = tableHTML;
+            
+            let dimensions = Object.keys(data.scores);
+            let scores = Object.values(data.scores);
+            let plotData = [{
+                type: 'scatterpolar',
+                r: scores,
+                theta: dimensions,
+                fill: 'toself'
+            }];
+            
+            let layout = {
+                polar: { radialaxis: { visible: true, range: [1, 6] } },
+                showlegend: false,
+                title: "Public Value Netzdiagramm"
+            };
+            
+            Plotly.newPlot('chart', plotData, layout);
+        }
+        
+        fetchResults();
+    </script>
+</body>
+</html>
