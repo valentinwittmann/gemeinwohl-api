@@ -1,12 +1,4 @@
-function submitQuestion() {
-    let question = document.getElementById("question").value;
-    if (question.trim() === "") {
-        alert("Please enter a question.");
-        return;
-    }
-    window.location.href = `results.html?question=${encodeURIComponent(question)}`;
-}
-
+// Anpassung der API-Integration für Mistral
 async function fetchResults() {
     const urlParams = new URLSearchParams(window.location.search);
     const question = urlParams.get("question");
@@ -15,34 +7,31 @@ async function fetchResults() {
         return;
     }
     
-    const response = await fetch(`https://gemeinwohl-api.onrender.com/evaluate/?question=${encodeURIComponent(question)}`);
-    const data = await response.json();
+    // Mistral API Anfrage
+    const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer ag:44e187cb:20250219:gemeinwohl-berater-in:a879293c"
+        },
+        body: JSON.stringify({
+            model: "mistral-medium",
+            messages: [{ role: "user", content: question }],
+            temperature: 0.7
+        })
+    });
     
-    let tableHTML = "<table><tr><th>Dimension</th><th>Score</th></tr>";
-    for (const [dimension, score] of Object.entries(data.scores)) {
-        tableHTML += `<tr><td>${dimension}</td><td>${score}</td></tr>`;
-    }
+    const data = await response.json();
+    const answer = data.choices[0].message.content;
+    
+    // Ergebnisse anzeigen
+    let tableHTML = `<table><tr><th>Antwort</th></tr>`;
+    tableHTML += `<tr><td>${answer}</td></tr>`;
     tableHTML += "</table>";
     document.getElementById("resultTable").innerHTML = tableHTML;
-    
-    let dimensions = Object.keys(data.scores);
-    let scores = Object.values(data.scores);
-    let plotData = [{
-        type: 'scatterpolar',
-        r: scores,
-        theta: dimensions,
-        fill: 'toself'
-    }];
-    
-    let layout = {
-        polar: { radialaxis: { visible: true, range: [1, 6] } },
-        showlegend: false,
-        title: "Public Value Netzdiagramm"
-    };
-    
-    Plotly.newPlot('chart', plotData, layout);
 }
 
+// Event-Listener für Enter-Taste im Inputfeld
 if (document.getElementById("question")) {
     document.getElementById("question").addEventListener("keypress", function(event) {
         if (event.key === "Enter") {
@@ -51,6 +40,7 @@ if (document.getElementById("question")) {
     });
 }
 
+// Falls wir auf results.html sind, Ergebnisse abrufen
 if (window.location.pathname.includes("results.html")) {
     fetchResults();
 }
