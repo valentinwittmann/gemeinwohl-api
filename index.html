@@ -33,18 +33,9 @@
 </head>
 <body>
     <h1>Public Value Advisor</h1>
-    <input type="text" id="question" placeholder="What is the Public Value impact of...">
+    <input type="text" id="question" placeholder="Ask a question...">
     <button onclick="submitQuestion()">Evaluate</button>
     
-    <script>
-        function submitQuestion() {
-            let question = document.getElementById("question").value;
-            if (question.trim() === "") {
-                alert("Please enter a question.");
-                return;
-            }
-            window.location.href = `results.html?question=${encodeURIComponent(question)}`;
-        }
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
